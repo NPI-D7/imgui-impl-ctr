@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+*.smdh
+*.elf
+*.3dsx
+
+# Spritesheets
+*.t3x
