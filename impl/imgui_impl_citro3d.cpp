@@ -1,7 +1,7 @@
 // This Backend is heavily based on mtheall's ftpd citro3d and ctr
 // implementation Link: https://github.com/mtheall/ftpd/blob/master/source/3ds/
-#include "imgui_impl_citro3d.h"
 // Shader
+#include "imgui_impl_citro3d.h"
 #include <3ds.h>
 #include <citro3d.h>
 
@@ -33,6 +33,7 @@ struct ImGui_ImplCitro3D_Backend_Data {
   // Shader
   DVLB_s *shader = nullptr;
   shaderProgram_s shader_program;
+  C3D_AttrInfo attr_info;
 
   // Matrix
   int uLoc_projection;
@@ -108,13 +109,6 @@ unsigned int fontCodePointFromGlyphIndex(CFNT_s *const font,
 
 void SetupRendererForScreen(const gfxScreen_t screen) {
   auto bknd_data = ImGui_ImplCitro3D_GetBackendData();
-  // Setup ShaderInputs
-  auto attrInfo = C3D_GetAttrInfo();
-  AttrInfo_Init(attrInfo);
-  AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 2);          // inPosition aka v0
-  AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2);          // inTexcoord aka v1
-  AttrInfo_AddLoader(attrInfo, 2, GPU_UNSIGNED_BYTE, 4);  // inColor aka v2
-
   for (int i = 0; i < 4; i++) {
     bknd_data->boundScissor[i] = 0xFFFFFFFF;
   }
@@ -123,6 +117,7 @@ void SetupRendererForScreen(const gfxScreen_t screen) {
 
   // Bind Shader
   C3D_BindProgram(&bknd_data->shader_program);
+  C3D_SetAttrInfo(&bknd_data->attr_info);
 
   C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_COLOR);
   C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA,
@@ -163,6 +158,11 @@ IMGUI_IMPL_API bool ImGui_ImplCitro3D_Init(bool load_sysfont) {
 
   bknd_data->uLoc_projection = shaderInstanceGetUniformLocation(
       bknd_data->shader_program.vertexShader, "projection");
+
+  AttrInfo_Init(&bd->attr_info);
+  AttrInfo_AddLoader(&bd->attr_info, 0, GPU_FLOAT, 2);          // inPosition aka v0
+  AttrInfo_AddLoader(&bd->attr_info, 1, GPU_FLOAT, 2);          // inTexcoord aka v1
+  AttrInfo_AddLoader(&bd->attr_info, 2, GPU_UNSIGNED_BYTE, 4);  // inColor aka v2
 
   // linear alloc Vertex Data
   bknd_data->VertexSize = 65536;
